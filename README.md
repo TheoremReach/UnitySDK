@@ -1,6 +1,6 @@
 # TheoremReach Unity-SDK
 
-TheoremReach Unity SDK v3.3.1
+TheoremReach Unity SDK v3.3.3
 For additional information, please see the [TheoremReach Unity SDK Integration](https://theoremreach.com/docs/unity).
 
 ## Setup
@@ -9,7 +9,7 @@ Create an [app](https://theoremreach.com/developer/apps) and grab your API Token
 
 #### Download:
 
-Download and import the theoremreach-3.3.1.unitypackage into your Unity project as a custom package.
+Download and import the theoremreach-3.3.3.unitypackage into your Unity project as a custom package.
 
 ## Other platforms:
 
