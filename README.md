@@ -13,6 +13,16 @@ Create an [app](https://theoremreach.com/developer/apps) and grab your API Token
 Download and import the theoremreach-3.4.1.unitypackage into your Unity project as a custom package.
 
 
+## Changelog
+
+#### 3.4.1
+- Critical iOS update to decrease LC_VERSION_MIN_IPHONEOS back to 13.6
+
+#### 3.4.0
+
+- iOS 14 release preparations
+
+
 ## Other platforms:
 
 [TheoremReach iOS SDK Integration](https://theoremreach.com/docs/ios)
