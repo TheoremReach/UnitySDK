@@ -1,6 +1,6 @@
 # TheoremReach Unity-SDK
 
-TheoremReach Unity SDK v3.4.1
+TheoremReach Unity SDK v3.4.2
 
 For additional information, please see the [TheoremReach Unity SDK Integration](https://theoremreach.com/docs/unity).
 
@@ -10,10 +10,13 @@ Create an [app](https://theoremreach.com/developer/apps) and grab your API Token
 
 #### Download:
 
-Download and import the theoremreach-3.4.1.unitypackage into your Unity project as a custom package.
+Download and import the theoremreach-3.4.2.unitypackage into your Unity project as a custom package.
 
 
 ## Changelog
+
+#### 3.4.2
+- Added support for calling ShowRewardCenter with a placement id: `void ShowRewardCenter(string placementId);`
 
 #### 3.4.1
 - Critical iOS update to decrease LC_VERSION_MIN_IPHONEOS back to 13.6
