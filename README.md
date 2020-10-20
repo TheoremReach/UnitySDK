@@ -1,6 +1,6 @@
 # TheoremReach Unity-SDK
 
-TheoremReach Unity SDK v3.4.5
+TheoremReach Unity SDK v3.4.6
 
 For additional information, please see the [TheoremReach Unity SDK Integration](https://theoremreach.com/docs/unity).
 
@@ -10,10 +10,13 @@ Create an [app](https://theoremreach.com/developer/apps) and grab your API Token
 
 #### Download:
 
-Download and import the theoremreach-3.4.5.unitypackage into your Unity project as a custom package.
+Download and import the theoremreach-3.4.6.unitypackage into your Unity project as a custom package.
 
 
 ## Changelog
+
+#### 3.4.6
+- Remove android 'READ_PHONE_STATE' permission requirement
 
 #### 3.4.5
 - Fix iOS code signing issue
