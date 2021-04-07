@@ -14,6 +14,8 @@ Download and import the theoremreach-3.4.6.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.4.7
+- Update Android and iOS SDK versions
 
 #### 3.4.6
 - Remove android 'READ_PHONE_STATE' permission requirement
