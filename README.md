@@ -1,7 +1,5 @@
 # TheoremReach Unity-SDK
 
-TheoremReach Unity SDK v3.4.6
-
 For additional information, please see the [TheoremReach Unity SDK Integration](https://theoremreach.com/docs/unity).
 
 ## Setup
