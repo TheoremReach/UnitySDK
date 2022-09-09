@@ -8,10 +8,13 @@ Create an [app](https://theoremreach.com/developer/apps) and grab your API Token
 
 #### Download:
 
-Download and import the theoremreach-3.4.6.unitypackage into your Unity project as a custom package.
+Download and import the theoremreach-x.x.x.unitypackage into your Unity project as a custom package.
 
 
 ## Changelog
+#### 3.5.0
+- Fix mobile network issue with android sdk
+
 #### 3.4.7
 - Update Android and iOS SDK versions
 
