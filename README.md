@@ -12,8 +12,11 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.5.2
+Update iOS sdk to fix visual issue in landscape
+
 #### 3.5.1
-Update Android and iOS sdks. No functional changes.
+Update Android and iOS sdks. No functional changes
 
 #### 3.5.0
 - Fix mobile network issue with android sdk
