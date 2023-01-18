@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.5.3
+Fix issue with redirecting to offers
+
 #### 3.5.2
 Update iOS sdk to fix visual issue in landscape
 
