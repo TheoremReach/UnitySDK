@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.5.4
+Better third party login support
+
 #### 3.5.3
 Fix issue with redirecting to offers
 
