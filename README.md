@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.5.7
+Remove bitcode
+
 #### 3.5.6
 Updated version tracking and default colors
 
