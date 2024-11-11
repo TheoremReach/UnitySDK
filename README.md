@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.5.9
+image upload support
+
 #### 3.5.8
 Update bottom bar color in Android
 
