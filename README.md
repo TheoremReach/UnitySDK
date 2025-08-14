@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.6.0
+Added support for Android 16 edge-to-edge
+
 #### 3.5.10
 Added Android Photo Picker for image upload
 
