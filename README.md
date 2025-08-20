@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.6.1
+Removed fixed screen orientation setting for Android
+
 #### 3.6.0
 Added support for Android 16 edge-to-edge
 
