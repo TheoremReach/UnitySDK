@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.6.2
+Fixed Android webview flickering issue
+
 #### 3.6.1
 Removed fixed screen orientation setting for Android
 
