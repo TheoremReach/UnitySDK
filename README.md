@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.6.3
+Miscellaneous updates
+
 #### 3.6.2
 Fixed Android webview flickering issue
 
