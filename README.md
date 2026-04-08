@@ -12,6 +12,9 @@ Download and import the theoremreach-x.x.x.unitypackage into your Unity project 
 
 
 ## Changelog
+#### 3.7.0
+Fix Android dependency resolution by migrating to EDM4U; update iOS SDK to xcframework format
+
 #### 3.6.3
 Miscellaneous updates
 
