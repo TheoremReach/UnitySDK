@@ -1,0 +1,26 @@
+name: CI
+
+# A Unity package is a folder, so its checks need no Unity editor: .github/scripts/check_package.py says what they are.
+# Compiling the C# and building a game with the package happen in the demo project's dev loop.
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check the package
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the package
+        run: python3 .github/scripts/check_package.py

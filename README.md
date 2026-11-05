@@ -1,92 +1,157 @@
-# TheoremReach Unity-SDK
+# TheoremReach Unity SDK
 
-For additional information, please see the [TheoremReach Unity SDK Integration](https://theoremreach.com/docs/unity).
+Monetize your players through rewarded surveys. This package wraps TheoremReach's native SDKs: Android 3.7.1 and iOS
+3.6.2. The integration guide is at [theoremreach.com/docs/unity](https://theoremreach.com/docs/unity).
 
-## Setup
+## Requirements
 
-Create an [app](https://theoremreach.com/developer/apps) and grab your API Token.
+- Unity 2022.3.62f1 or later, Unity 6 included.
+- Android: a Target API Level of 35 or later (Google sign-in uses Credential Manager, which needs compileSdk 35), and a
+  Minimum API Level of 23 or later.
+- iOS 14 or later.
+- Git, which Unity's Package Manager uses to fetch a package from a git URL.
 
-#### Download:
+The package depends on Unity's External Dependency Manager (`com.unity.external-dependency-manager`), which the Package
+Manager installs with it. A game that stays on an older Unity can keep the 3.7.0 `.unitypackage`
+([theoremreach-3.7.0.unitypackage](https://github.com/TheoremReach/UnitySDK/raw/1fb3e741362f7b594cda50db9c92e6568aa507a9/theoremreach-3.7.0.unitypackage)).
 
-Download and import the theoremreach-x.x.x.unitypackage into your Unity project as a custom package.
+## Install
 
+In Unity, open **Window > Package Manager**, choose **+ > Add package from git URL...**, and enter:
+
+```
+https://github.com/TheoremReach/UnitySDK.git#4.0.0
+```
+
+Or add it to `Packages/manifest.json`:
+
+```json
+"com.theoremreach.sdk": "https://github.com/TheoremReach/UnitySDK.git#4.0.0"
+```
+
+To upgrade, change the tag. The Package Manager replaces the whole package, so no old file stays behind.
+
+### Upgrading from a .unitypackage (3.7.0 and earlier)
+
+1. **Before you add the package,** delete the old TheoremReach files under `Assets`: `Assets/Plugins/TheoremReach.cs`,
+   `Assets/Plugins/iOS/TheoremReachWrapper.h` and `.mm`, `Assets/Plugins/iOS/SDK`, and `Assets/TheoremReach`. Left in,
+   the old `TheoremReach` class collides with the package's, and the editor stops at compile errors.
+2. Add the package. When it first loads, it looks for anything else the old packages left, such as the `theoremreach`
+   and library AARs in `Assets/Plugins/Android`, by the GUIDs those packages gave them, and offers to move it to the
+   trash. **Tools > TheoremReach > Remove Old TheoremReach Files** offers again.
+3. If you added Google's EDM4U only for TheoremReach, you can remove it: Unity's External Dependency Manager replaces
+   it. While both are installed, Unity asks which to use.
+
+The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Two things changed:
+
+- Every call now exists on every platform, and does nothing outside an Android or iOS player, the editor included. So
+  `#if UNITY_ANDROID || UNITY_IOS` around the calls is no longer needed.
+- A call throws an `ArgumentException` for a null or empty API key, user ID, GameObject name or color, which 3.7.0
+  passed on to the native SDKs.
+
+## Usage
+
+```csharp
+using UnityEngine;
+
+public class Surveys : MonoBehaviour
+{
+    void Start()
+    {
+        TheoremReach.Initialize("YOUR_API_KEY", "YOUR_USER_ID");
+        // Settings go after Initialize, which resets some of them.
+        TheoremReach.SetNavigationBarText("Earn rewards");
+        TheoremReach.SetListener(gameObject.name);
+    }
+
+    // From your surveys button.
+    public void ShowSurveys()
+    {
+        TheoremReach.ShowRewardCenter();
+    }
+
+    // Android: tell the SDK when the game pauses and resumes.
+    void OnApplicationPause(bool paused)
+    {
+        if (paused) TheoremReach.OnPause();
+    }
+
+    void OnApplicationFocus(bool focused)
+    {
+        if (focused) TheoremReach.OnResume();
+    }
+
+    // The SDK's callbacks, sent to the GameObject SetListener names.
+    void OnReward(string quantity)
+    {
+        // Credit quantity of your currency to the player.
+    }
+
+    void OnRewardCenterOpened() { }
+
+    void OnRewardCenterClosed() { }
+
+    void TheoremReachSurveyAvailable(string available)
+    {
+        // "true" or "false"
+    }
+}
+```
+
+The SDK sends each callback to the listener GameObject by its name, so keep that object in the scene while the reward
+center is open, or across scenes with `DontDestroyOnLoad`.
+
+### Calls
+
+| Call | What it does |
+| --- | --- |
+| `Initialize(apiKey, userId)` | Starts the SDK for this user. The user ID comes back in the server side reward callback. |
+| `SetListener(gameObjectName)` | The GameObject that gets the callbacks. |
+| `ShowRewardCenter()`, `ShowRewardCenter(placementId)` | Opens the reward center, at a placement when you pass one. |
+| `IsSurveyAvailable()` | Whether a survey is available now. |
+| `SetNavigationBarText(text)` | The reward center's title. |
+| `SetNavigationBarColor(hexColor)` | The title bar's color, such as `#17b4b3`. |
+| `SetNavigationBarTextColor(hexColor)` | The title's color. |
+| `SetLoadingBarColor(hexColor)` | The thin loading bar's color, `#FC178D` by default. |
+| `SetMmpInstallId(provider, installId)` | For a game that measures installs with a mobile measurement partner (MMP): the partner, such as `apptrove`, and its install ID. Call it before the reward center opens. |
+| `OnResume()`, `OnPause()` | Android: the game came back to the front, or went to the background. |
+
+Make the settings after `Initialize`: starting the SDK resets some of them (the colors on iOS, the title on Android).
+The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`, `ResetProfiler`,
+`SetOverrideCloseButtonURL` and `SetOverrideRefreshButtonURL` are kept.
+
+### Callbacks
+
+| Method on the listener GameObject | When |
+| --- | --- |
+| `OnReward(string quantity)` | The player earned `quantity` of your currency, in your app's units. |
+| `OnRewardCenterOpened()` | The reward center opened. |
+| `OnRewardCenterClosed()` | The reward center closed. |
+| `TheoremReachSurveyAvailable(string available)` | A survey became available (`"true"`) or not (`"false"`). |
+
+For security, we recommend crediting rewards from the server side callback; if you use both, credit each reward once.
+
+## Android
+
+The External Dependency Manager adds `com.theoremreach:theoremreach:3.7.1` from Maven Central to the Gradle build, with
+the libraries it names. No AAR goes into `Assets`.
+
+## iOS
+
+The package bundles `TheoremReachSDK.xcframework` (3.6.2), which its import settings embed in the app. The reward center
+opens from Unity's own view controller, and the status bar over it follows its title.
+
+## Other platforms
+
+[iOS](https://theoremreach.com/docs/ios) · [Android](https://theoremreach.com/docs/android) ·
+[React Native](https://theoremreach.com/docs/react_native) · [Web](https://theoremreach.com/docs/web)
 
 ## Changelog
-#### 3.7.0
-Fix Android dependency resolution by migrating to EDM4U; update iOS SDK to xcframework format
 
-#### 3.6.3
-Miscellaneous updates
+See [CHANGELOG.md](CHANGELOG.md).
 
-#### 3.6.2
-Fixed Android webview flickering issue
+## License
 
-#### 3.6.1
-Removed fixed screen orientation setting for Android
-
-#### 3.6.0
-Added support for Android 16 edge-to-edge
-
-#### 3.5.10
-Added Android Photo Picker for image upload
-
-#### 3.5.9
-image upload support
-
-#### 3.5.8
-Update bottom bar color in Android
-
-#### 3.5.7
-Remove bitcode
-
-#### 3.5.6
-Updated version tracking and default colors
-
-#### 3.5.5
-Fix close and refresh buttons for iPhone 8 and earlier
-
-#### 3.5.4
-Better third party login support
-
-#### 3.5.3
-Fix issue with redirecting to offers
-
-#### 3.5.2
-Update iOS sdk to fix visual issue in landscape
-
-#### 3.5.1
-Update Android and iOS sdks. No functional changes
-
-#### 3.5.0
-- Fix mobile network issue with android sdk
-
-#### 3.4.7
-- Update Android and iOS SDK versions
-
-#### 3.4.6
-- Remove android 'READ_PHONE_STATE' permission requirement
-
-#### 3.4.5
-- Fix iOS code signing issue
-
-#### 3.4.4
-- Update Android sdk version
-
-#### 3.4.2
-- Added support for calling ShowRewardCenter with a placement id: `void ShowRewardCenter(string placementId);`
-
-#### 3.4.1
-- Critical iOS update to decrease LC_VERSION_MIN_IPHONEOS back to 13.6
-
-#### 3.4.0
-
-- iOS 14 release preparations
-
-
-## Other platforms:
-
-[TheoremReach iOS SDK Integration](https://theoremreach.com/docs/ios)
-
-[TheoremReach Android SDK Integration](https://theoremreach.com/docs/android)
-
-[TheoremReach Javascript Web SDK Integration](https://theoremreach.com/docs/web)  
+The TheoremReach SDK is licensed under the
+[TheoremReach Publisher Terms and Conditions](https://info.theoremreach.com/terms-of-service/); see
+[LICENSE.md](LICENSE.md).

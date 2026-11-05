@@ -1,0 +1,12 @@
+<dependencies>
+  <androidPackages>
+    <!-- The SDK's POM brings the libraries it needs (Credential Manager, AndroidX, Play services), so this one entry
+         replaces the list the .unitypackage kept by hand. Its version is the package's, which CI checks. -->
+    <androidPackage spec="com.theoremreach:theoremreach:3.7.1">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+        <repository>https://repo.maven.apache.org/maven2</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>
