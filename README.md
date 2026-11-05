@@ -19,7 +19,7 @@ Manager installs with it. A game that stays on an older Unity can keep the 3.7.0
 
 In Unity, open **Window > Package Manager**, choose **+ > Add package from git URL...**, and enter:
 
-```
+```text
 https://github.com/TheoremReach/UnitySDK.git#4.0.0
 ```
 
@@ -42,12 +42,15 @@ To upgrade, change the tag. The Package Manager replaces the whole package, so n
 3. If you added Google's EDM4U only for TheoremReach, you can remove it: Unity's External Dependency Manager replaces
    it. While both are installed, Unity asks which to use.
 
-The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Two things changed:
+The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Three things changed:
 
 - Every call now exists on every platform, and does nothing outside an Android or iOS player, the editor included. So
   `#if UNITY_ANDROID || UNITY_IOS` around the calls is no longer needed.
 - A call throws an `ArgumentException` for a null or empty API key, user ID, GameObject name or color, which 3.7.0
   passed on to the native SDKs.
+- The native SDKs send their callbacks to the package's own GameObject, `TheoremReachCallbacks`, kept across scenes,
+  which passes them on to your listener. A reward that comes while your listener isn't in the scene waits for it,
+  where 3.7.0 lost it.
 
 ## Usage
 
@@ -98,8 +101,10 @@ public class Surveys : MonoBehaviour
 }
 ```
 
-The SDK sends each callback to the listener GameObject by its name, so keep that object in the scene while the reward
-center is open, or across scenes with `DontDestroyOnLoad`.
+Each callback goes to the GameObject `SetListener` names, found by that name when the callback comes. A reward waits
+until a GameObject of that name with an `OnReward` method is in the scene, so one that arrives while the listener's
+scene is loading isn't lost. The other callbacks go only to a listener that's there. The wait is in memory: a reward
+still waiting when the game ends is lost, and starting the SDK for another user drops it.
 
 ### Calls
 

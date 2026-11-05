@@ -9,6 +9,10 @@
 - Unity 2022.3.62f1 or later, with Unity's External Dependency Manager in place of Google's EDM4U. One Maven entry
   replaces the hand-kept list of Android libraries.
 - New: `SetLoadingBarColor` and `SetMmpInstallId`.
+- A reward that comes while the listener GameObject isn't in the scene waits for it, instead of being lost: the SDKs
+  confirm a reward once they've sent it. They now send every callback to the package's own GameObject, kept across
+  scenes, which passes each one on to the listener `SetListener` names. A start for another user drops a waiting
+  reward.
 - Every call exists on every platform and does nothing outside an Android or iOS player. A null or empty argument
   throws an `ArgumentException`.
 - iOS: the reward center opens from Unity's own view controller, one at a time, and the status bar over it follows its

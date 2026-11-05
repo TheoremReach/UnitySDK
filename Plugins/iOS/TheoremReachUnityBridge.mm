@@ -7,13 +7,14 @@ void UnitySendMessage(const char *obj, const char *method, const char *msg);
 UIViewController *UnityGetGLViewController(void);
 }
 
-// Between TheoremReach's iOS SDK and the package's C# API (TheoremReach.cs): the SDK's notifications go to the game's
-// listener GameObject through UnitySendMessage, and the C# calls come in through the C functions at the end. Unity
-// calls those on the main thread, where the SDK presents the reward center.
+// Between TheoremReach's iOS SDK and the package's C# API (TheoremReach.cs): the SDK's notifications go through
+// UnitySendMessage to the package's own GameObject (TheoremReachCallbacks.cs), which passes them on to the game's
+// listener, and the C# calls come in through the C functions at the end. Unity calls those on the main thread, where the
+// SDK presents the reward center.
 @interface TRUnityBridge : NSObject
 @end
 
-// The GameObject that hears the SDK, from SetListener.
+// The package's GameObject that hears the SDK, which Initialize names.
 static NSString *TRListenerName;
 // The game heard the reward center open and hasn't heard it close.
 static BOOL TRRewardCenterOpen;
@@ -31,7 +32,7 @@ static NSString *TRString(const char *text)
 static void TRSend(const char *method, NSString *message)
 {
     if (TRListenerName.length == 0) {
-        NSLog(@"TheoremReach: no GameObject heard %s, since SetListener hasn't named one", method);
+        NSLog(@"TheoremReach: %s came before Initialize, so nothing heard it", method);
         return;
     }
     UnitySendMessage(TRListenerName.UTF8String, method, (message ?: @"").UTF8String);

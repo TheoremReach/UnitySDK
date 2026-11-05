@@ -23,7 +23,15 @@ public class TheoremReach : MonoBehaviour
     {
         RequireText(apiKey, nameof(apiKey));
         RequireText(userId, nameof(userId));
+#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+        // A waiting reward is only ever the current user's.
+        if (currentUserId != null && currentUserId != userId) TheoremReachCallbacks.DropWaitingRewards();
+        currentUserId = userId;
+        // The SDKs send every callback to the package's own GameObject, which passes them on to the game's listener.
+        TheoremReachCallbacks.EnsureExists();
+#endif
 #if UNITY_IOS && !UNITY_EDITOR
+        TheoremReach_setListener(TheoremReachCallbacks.ObjectName);
         TheoremReach_initialize(apiKey, userId);
 #elif UNITY_ANDROID && !UNITY_EDITOR
         // Unity's APIs answer only on its own thread, not on Android's main thread where the SDK runs.
@@ -32,6 +40,7 @@ public class TheoremReach : MonoBehaviour
         OnAndroidMainThread(sdk =>
         {
             sdk.Call("setUnityGame", true);
+            sdk.Call("setUnityObjectName", TheoremReachCallbacks.ObjectName);
             SdkClass().CallStatic<AndroidJavaObject>("initWithApiKeyAndUserIdAndActivityContext", apiKey, userId,
                 activity).Dispose();
             // Android's start titles the reward center TheoremReach. A game's is its product name, as in 3.x.
@@ -44,16 +53,15 @@ public class TheoremReach : MonoBehaviour
 
     /// <summary>
     /// The name of the GameObject whose OnReward(string quantity), OnRewardCenterOpened(), OnRewardCenterClosed() and
-    /// TheoremReachSurveyAvailable(string available) methods hear the SDK. The SDK finds it by name when it calls, so
-    /// keep it in the scene, or across scenes with DontDestroyOnLoad.
+    /// TheoremReachSurveyAvailable(string available) methods hear the SDK. It's found by name for each callback. A
+    /// reward waits until a GameObject of that name with an OnReward method is in the scene; the other callbacks go only
+    /// to one that's there.
     /// </summary>
     public static void SetListener(string gameObjectName)
     {
         RequireText(gameObjectName, nameof(gameObjectName));
-#if UNITY_IOS && !UNITY_EDITOR
-        TheoremReach_setListener(gameObjectName);
-#elif UNITY_ANDROID && !UNITY_EDITOR
-        OnAndroidMainThread(sdk => sdk.Call("setUnityObjectName", gameObjectName));
+#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+        TheoremReachCallbacks.SetListener(gameObjectName);
 #else
         NotInThisPlayer();
 #endif
@@ -290,6 +298,10 @@ public class TheoremReach : MonoBehaviour
             throw new ArgumentNullException(name, "TheoremReach: " + name + " must be a string.");
         }
     }
+
+#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+    private static string currentUserId;
+#endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
     private const string AndroidSdkClass = "theoremreach.com.theoremreach.TheoremReach";

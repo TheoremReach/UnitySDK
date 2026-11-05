@@ -29,7 +29,7 @@ XCFRAMEWORK = 'Plugins/iOS/TheoremReachSDK.xcframework'
 # Every file the package ships, besides the xcframework's own, and the folders between them.
 FILES = [
     'package.json', 'README.md', 'CHANGELOG.md', 'LICENSE.md',
-    'Runtime/TheoremReach.Runtime.asmdef', 'Runtime/TheoremReach.cs',
+    'Runtime/TheoremReach.Runtime.asmdef', 'Runtime/TheoremReach.cs', 'Runtime/TheoremReachCallbacks.cs',
     'Editor/TheoremReach.Editor.asmdef', 'Editor/TheoremReachDependencies.xml', 'Editor/TheoremReachLegacyCleanup.cs',
     'Plugins/iOS/TheoremReachUnityBridge.mm',
 ]
