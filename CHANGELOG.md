@@ -13,10 +13,11 @@
   confirm a reward once they've sent it. They now send every callback to the package's own GameObject, kept across
   scenes, which passes each one on to the listener `SetListener` names. A start for another user drops a waiting
   reward.
-- Each `OnRewardCenterOpened` gets one `OnRewardCenterClosed`: on Android when a second show replaces an open reward
-  center, and on iOS when `Initialize` comes while one is open.
+- No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, as one did on Android when a
+  second show replaced an open reward center. On iOS, `Initialize` while one is open sends its close, which the SDK's
+  start would lose.
 - Every call exists on every platform and does nothing outside an Android or iOS player. A null argument, or an empty
-  one where the SDKs need text, throws an `ArgumentException`.
+  one where the SDKs need text, throws an `ArgumentException`; a null placement is no placement.
 - iOS: the reward center opens from Unity's own view controller, one at a time, and the status bar over it follows its
   title. The framework embeds from its import settings, with no post-build script, so it's no longer embedded twice.
   The bridge's C functions are prefixed, so they can't collide with another plug-in's.

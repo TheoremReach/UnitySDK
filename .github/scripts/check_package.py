@@ -182,6 +182,23 @@ def parameter_count(parameters):
     return 0 if parameters in ('', 'void') else parameters.count(',') + 1
 
 
+def extern_c_block(source):
+    """Where the source's last extern "C" { ... } block starts and ends, found by counting braces: the bridge's
+    strings and comments hold none."""
+    start = source.rfind('extern "C" {')
+    if start < 0:
+        return 0, 0
+    depth = 0
+    for index in range(source.index('{', start), len(source)):
+        if source[index] == '{':
+            depth += 1
+        elif source[index] == '}':
+            depth -= 1
+            if depth == 0:
+                return start, index
+    return start, len(source)
+
+
 def check_bridge():
     # The C# binds each function by its name alone, so a function defined outside the bridge's extern "C" block, whose
     # name C++ mangles, fails only at the game's link, and one that takes a different number of arguments only at run
@@ -189,11 +206,11 @@ def check_bridge():
     called = {name: parameter_count(parameters) for name, parameters in
               re.findall(r'extern \w+ (TheoremReach_\w+)\(([^)]*)\);', read('Runtime/TheoremReach.cs'))}
     bridge = read('Plugins/iOS/TheoremReachUnityBridge.mm')
-    c_block = bridge.rfind('extern "C" {')
+    block_start, block_end = extern_c_block(bridge)
     defined = {}
     for definition in re.finditer(r'^\w+ (TheoremReach_\w+)\(([^)]*)\)$', bridge, re.M):
         name = definition.group(1)
-        if definition.start() < c_block:
+        if not block_start < definition.start() < block_end:
             fail(f'The iOS bridge defines {name} outside its extern "C" block, so the C# can\'t find it')
         defined[name] = parameter_count(definition.group(2))
     for name in sorted(called.keys() - defined.keys()):

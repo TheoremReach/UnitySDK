@@ -48,7 +48,8 @@ The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Three thing
 - Every call now exists on every platform, and does nothing outside an Android or iOS player, the editor included. So
   `#if UNITY_ANDROID || UNITY_IOS` around the calls is no longer needed.
 - A call throws an `ArgumentException` for a null argument, or an empty one where the SDKs need text: an API key, a
-  user ID, a GameObject name, a color, an MMP or its install ID, or a URL. 3.7.0 passed them on to the native SDKs.
+  user ID, a GameObject name, a color, an MMP or its install ID, or a URL. 3.7.0 passed them on to the native SDKs. A
+  null placement is no placement, as in `ShowRewardCenter()`.
 - The native SDKs send their callbacks to the package's own GameObject, `TheoremReachCallbacks`, kept across scenes,
   which passes them on to your listener. A reward that comes while your listener isn't in the scene waits for it,
   where 3.7.0 lost it. `Initialize` makes that GameObject, so call it on Unity's main thread, and keep the GameObject:
@@ -136,8 +137,9 @@ The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`,
 | `OnRewardCenterClosed()` | The reward center closed. |
 | `TheoremReachSurveyAvailable(string available)` | A survey became available (`"true"`) or not (`"false"`). |
 
-Each `OnRewardCenterOpened` is followed by one `OnRewardCenterClosed`, so a game can pause for the reward center and
-resume after it.
+No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, so a game can pause for the
+reward center and resume after it. Like every callback but a reward, each goes only to a listener that's there when it
+comes.
 
 For security, we recommend crediting rewards from the server side callback; if you use both, credit each reward once.
 
