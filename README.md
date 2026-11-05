@@ -5,7 +5,8 @@ Monetize your players through rewarded surveys. This package wraps TheoremReach'
 
 ## Requirements
 
-- Unity 2022.3.62f1 or later, Unity 6 included.
+- Unity 2022.3.62f3 or later, Unity 6 included. On iOS, Unity's Objective-C Xcode project: the Swift project type that
+  Unity 6.5 added as an option isn't supported yet.
 - Android: a Target API Level of 35 or later (Google sign-in uses Credential Manager, which needs compileSdk 35), and a
   Minimum API Level of 23 or later.
 - iOS 14 or later.
@@ -46,11 +47,12 @@ The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Three thing
 
 - Every call now exists on every platform, and does nothing outside an Android or iOS player, the editor included. So
   `#if UNITY_ANDROID || UNITY_IOS` around the calls is no longer needed.
-- A call throws an `ArgumentException` for a null or empty API key, user ID, GameObject name or color, which 3.7.0
-  passed on to the native SDKs.
+- A call throws an `ArgumentException` for a null argument, or an empty one where the SDKs need text: an API key, a
+  user ID, a GameObject name, a color, an MMP or its install ID, or a URL. 3.7.0 passed them on to the native SDKs.
 - The native SDKs send their callbacks to the package's own GameObject, `TheoremReachCallbacks`, kept across scenes,
   which passes them on to your listener. A reward that comes while your listener isn't in the scene waits for it,
-  where 3.7.0 lost it.
+  where 3.7.0 lost it. `Initialize` makes that GameObject, so call it on Unity's main thread, and keep the GameObject:
+  a game that destroys everything kept across scenes, to restart, calls `Initialize` again afterwards.
 
 ## Usage
 
@@ -102,9 +104,9 @@ public class Surveys : MonoBehaviour
 ```
 
 Each callback goes to the GameObject `SetListener` names, found by that name when the callback comes. A reward waits
-until a GameObject of that name with an `OnReward` method is in the scene, so one that arrives while the listener's
-scene is loading isn't lost. The other callbacks go only to a listener that's there. The wait is in memory: a reward
-still waiting when the game ends is lost, and starting the SDK for another user drops it.
+while no active GameObject has that name, so one that arrives while the listener's scene is loading isn't lost. The
+other callbacks go only to a listener that's there. The wait is in memory: a reward still waiting when the game ends
+is lost, and starting the SDK for another user drops it.
 
 ### Calls
 
@@ -134,12 +136,17 @@ The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`,
 | `OnRewardCenterClosed()` | The reward center closed. |
 | `TheoremReachSurveyAvailable(string available)` | A survey became available (`"true"`) or not (`"false"`). |
 
+Each `OnRewardCenterOpened` is followed by one `OnRewardCenterClosed`, so a game can pause for the reward center and
+resume after it.
+
 For security, we recommend crediting rewards from the server side callback; if you use both, credit each reward once.
 
 ## Android
 
 The External Dependency Manager adds `com.theoremreach:theoremreach:3.7.1` from Maven Central to the Gradle build, with
-the libraries it names. No AAR goes into `Assets`.
+the libraries it names. It writes the dependency and its repositories into the Gradle templates in
+`Assets/Plugins/Android` (`mainTemplate.gradle`, `settingsTemplate.gradle` and `gradleTemplate.properties`), copying in
+Unity's own when the project has none, so keep those files in your project. No AAR goes into `Assets`.
 
 ## iOS
 

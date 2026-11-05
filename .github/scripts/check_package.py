@@ -3,14 +3,15 @@
 
 - The versions agree: package.json's, the C# constant, the README's install tag and the changelog's newest entry. So do
   the native SDKs': the Android one the dependency file names, and the iOS one the xcframework declares, against the
-  README and the changelog.
+  README and the changelog. The README and the changelog name the Unity floor package.json declares.
 - The package holds only the files below, so nothing else ships.
-- Every file and folder Unity imports has a .meta, every .meta has its asset, and every GUID is unique and none that
-  the old .unitypackages used, which the cleanup script removes.
+- Every file and folder Unity imports has a .meta, every .meta has its asset, and every GUID is unique. None is one the
+  cleanup script removes: the old .unitypackages' files, and the folders that held the rest of theirs.
 - The xcframework is byte for byte, and mode for mode, the iOSSDK repository's at the tag of its version. Each slice
   declares that version and the same source commit.
 - The xcframework is embedded once, from its import settings: no post-build script embeds it again.
-- Every iOS function the C# calls is defined in the bridge, and every one the bridge defines is called.
+- Every iOS function the C# calls is defined in the bridge, inside its extern "C" block and with as many parameters,
+  and every one the bridge defines is called. The bridge compiles with ARC.
 - Maven Central serves the Android SDK's POM.
 """
 import glob
@@ -32,8 +33,9 @@ FILES = [
     'Runtime/TheoremReach.Runtime.asmdef', 'Runtime/TheoremReach.cs', 'Runtime/TheoremReachCallbacks.cs',
     'Editor/TheoremReach.Editor.asmdef', 'Editor/TheoremReachDependencies.xml', 'Editor/TheoremReachLegacyCleanup.cs',
     'Plugins/iOS/TheoremReachUnityBridge.mm',
+    'Tests/Runtime/TheoremReach.Tests.asmdef', 'Tests/Runtime/TheoremReachCallbacksTests.cs',
 ]
-FOLDERS = ['Runtime', 'Editor', 'Plugins', 'Plugins/iOS']
+FOLDERS = ['Runtime', 'Editor', 'Plugins', 'Plugins/iOS', 'Tests', 'Tests/Runtime']
 # Files Unity never imports: the repository's own.
 UNIMPORTED = re.compile(r'^(\.github/|\.gitignore$|\.gitattributes$)')
 
@@ -84,6 +86,9 @@ def check_versions():
         ios = plistlib.load(f)['CFBundleShortVersionString']
     # Prose wraps, so the words are compared with their whitespace collapsed.
     readme_words, changelog_words = ' '.join(readme.split()), ' '.join(changelog.split())
+    floor = f'Unity {package.get("unity")}.{package.get("unityRelease")} or later'
+    if floor not in readme_words or floor not in changelog_words:
+        fail(f'The README or the changelog doesn\'t say "{floor}", the floor package.json declares')
     for name, native in (('Android', android[0]), ('iOS', ios)):
         if f'{name} SDK {native}' not in changelog_words or f'{name} {native}' not in readme_words:
             fail(f'The README or the changelog doesn\'t name {name} {native}, the version the package takes')
@@ -156,25 +161,53 @@ def check_xcframework(ios):
     print(f'xcframework: byte for byte iOSSDK {ios}, {len(tracked)} files, from {commits}')
 
 
-def check_single_embed():
-    meta = read(XCFRAMEWORK + '.meta')
+def ios_import_settings(asset):
+    """Whether a plug-in's import settings enable it for iOS, and its iOS settings, from its .meta."""
     ios = re.search(r'iPhone: iOS\n    second:\n      enabled: (\d)\n      settings:(.*?)\n  (?:- first|userData)',
-                    meta, re.S)
-    if not ios or ios.group(1) != '1' or 'AddToEmbeddedBinaries: true' not in ios.group(2):
+                    read(asset + '.meta'), re.S)
+    return (ios.group(1) == '1', ios.group(2)) if ios else (False, '')
+
+
+def check_single_embed():
+    enabled, settings = ios_import_settings(XCFRAMEWORK)
+    if not enabled or 'AddToEmbeddedBinaries: true' not in settings:
         fail('The xcframework\'s import settings must enable it for iOS and embed it')
     for path in FILES:
         if path.endswith('.cs') and re.search(r'PostProcessBuild|AddFileToEmbedFrameworks', read(path)):
             fail(f'{path} embeds frameworks after the build, which the import settings already do')
 
 
+def parameter_count(parameters):
+    parameters = parameters.strip()
+    return 0 if parameters in ('', 'void') else parameters.count(',') + 1
+
+
 def check_bridge():
-    called = set(re.findall(r'extern \w+ (TheoremReach_\w+)\(', read('Runtime/TheoremReach.cs')))
-    defined = set(re.findall(r'^\w+ (TheoremReach_\w+)\(', read('Plugins/iOS/TheoremReachUnityBridge.mm'), re.M))
-    for name in sorted(called - defined):
+    # The C# binds each function by its name alone, so a function defined outside the bridge's extern "C" block, whose
+    # name C++ mangles, fails only at the game's link, and one that takes a different number of arguments only at run
+    # time. The block the bridge's own functions are defined in is its last.
+    called = {name: parameter_count(parameters) for name, parameters in
+              re.findall(r'extern \w+ (TheoremReach_\w+)\(([^)]*)\);', read('Runtime/TheoremReach.cs'))}
+    bridge = read('Plugins/iOS/TheoremReachUnityBridge.mm')
+    c_block = bridge.rfind('extern "C" {')
+    defined = {}
+    for definition in re.finditer(r'^\w+ (TheoremReach_\w+)\(([^)]*)\)$', bridge, re.M):
+        name = definition.group(1)
+        if definition.start() < c_block:
+            fail(f'The iOS bridge defines {name} outside its extern "C" block, so the C# can\'t find it')
+        defined[name] = parameter_count(definition.group(2))
+    for name in sorted(called.keys() - defined.keys()):
         fail(f'TheoremReach.cs calls {name}, which the iOS bridge doesn\'t define')
-    for name in sorted(defined - called):
+    for name in sorted(defined.keys() - called.keys()):
         fail(f'The iOS bridge defines {name}, which TheoremReach.cs never calls')
-    print(f'iOS bridge: {len(called)} functions')
+    for name in sorted(called.keys() & defined.keys()):
+        if called[name] != defined[name]:
+            fail(f'TheoremReach.cs passes {name} {called[name]} arguments, and the iOS bridge takes {defined[name]}')
+    # It keeps strings in statics, which only ARC holds on to.
+    enabled, settings = ios_import_settings('Plugins/iOS/TheoremReachUnityBridge.mm')
+    if not enabled or 'CompileFlags: -fobjc-arc' not in settings:
+        fail('The iOS bridge\'s import settings must enable it for iOS and compile it with -fobjc-arc')
+    print(f'iOS bridge: {len(called)} functions, {sum(called.values())} parameters')
 
 
 def check_central(android):

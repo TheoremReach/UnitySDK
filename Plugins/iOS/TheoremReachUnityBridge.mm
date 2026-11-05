@@ -14,7 +14,8 @@ UIViewController *UnityGetGLViewController(void);
 @interface TRUnityBridge : NSObject
 @end
 
-// The package's GameObject that hears the SDK, which Initialize names.
+// The package's GameObject that hears the SDK, which Initialize names. ARC keeps the string: this file's import
+// settings compile it with -fobjc-arc, whatever the game's Xcode project sets.
 static NSString *TRListenerName;
 // The game heard the reward center open and hasn't heard it close.
 static BOOL TRRewardCenterOpen;
@@ -152,8 +153,14 @@ extern "C" {
 
 void TheoremReach_initialize(const char *apiKey, const char *userId)
 {
-    // Starting the SDK forgets an open reward center, which then never reports its close.
+    // Starting the SDK forgets an open reward center, which then never reports its close, though it stays on screen
+    // until the player closes it. So the game's style comes back, and the game hears the close of the open it heard
+    // now rather than never: a game that paused its audio for the reward center would otherwise stay paused.
     TRRestoreStatusBar();
+    if (TRRewardCenterOpen) {
+        TRRewardCenterOpen = NO;
+        TRSend("OnRewardCenterClosed", @"");
+    }
     [TheoremReach initWithApiKey:TRString(apiKey) userId:TRString(userId)];
 }
 

@@ -24,7 +24,7 @@ public class TheoremReach : MonoBehaviour
         RequireText(apiKey, nameof(apiKey));
         RequireText(userId, nameof(userId));
 #if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
-        // A waiting reward is only ever the current user's.
+        // The rewards waiting for the listener were the last user's.
         if (currentUserId != null && currentUserId != userId) TheoremReachCallbacks.DropWaitingRewards();
         currentUserId = userId;
         // The SDKs send every callback to the package's own GameObject, which passes them on to the game's listener.
@@ -54,8 +54,7 @@ public class TheoremReach : MonoBehaviour
     /// <summary>
     /// The name of the GameObject whose OnReward(string quantity), OnRewardCenterOpened(), OnRewardCenterClosed() and
     /// TheoremReachSurveyAvailable(string available) methods hear the SDK. It's found by name for each callback. A
-    /// reward waits until a GameObject of that name with an OnReward method is in the scene; the other callbacks go only
-    /// to one that's there.
+    /// reward waits while no active GameObject has that name; the other callbacks go only to one that's there.
     /// </summary>
     public static void SetListener(string gameObjectName)
     {

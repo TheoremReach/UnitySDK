@@ -1,16 +1,20 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Scripting;
+
+// The package's PlayMode tests drive the receiver directly, as the SDKs do.
+[assembly: InternalsVisibleTo("TheoremReach.Tests")]
 
 // Hears the native SDKs, which send every callback by name to this GameObject, kept across scenes, and passes each one
 // on to the game's listener GameObject, which TheoremReach.SetListener names.
 //
 // The SDKs confirm a reward with TheoremReach as soon as they've sent it, and Unity drops a message to a GameObject that
-// isn't there. So a reward waits here until a listener with an OnReward method is in the scene: one whose scene hasn't
-// loaded yet or has unloaded, or one SetListener hasn't named yet. The wait is in memory, so a reward still waiting when
-// the game ends is lost. A waiting reward is only ever the current user's: starting the SDK for another user drops it.
+// isn't there. So a reward waits here while no active GameObject has the listener's name: one whose scene hasn't loaded
+// yet or has unloaded, or one SetListener hasn't named yet. A listener that's there gets it as in 3.x, so one with no
+// OnReward method, as in a game that credits rewards on its server, doesn't keep a reward waiting. The wait is in
+// memory, so a reward still waiting when the game ends is lost. Starting the SDK for another user drops the rewards
+// waiting here, though one the SDK sent before the switch that Unity hasn't delivered yet still comes, as in 3.x.
 // The other callbacks aren't held: a listener that isn't there misses them.
 [AddComponentMenu("")]
 [Preserve]
@@ -18,14 +22,17 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
 {
     internal const string ObjectName = "TheoremReachCallbacks";
 
-    private const BindingFlags AnyInstanceMethod =
-        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+    // GameObject.Find walks the scene's objects, so a waiting reward looks for the listener once a second, not every
+    // frame.
+    private const float ListenerCheckSeconds = 1f;
 
     private static TheoremReachCallbacks instance;
     private static string listenerName;
     private static readonly Queue<string> waitingRewards = new Queue<string>();
-    // Whether a component type has a method SendMessage would call, by name: it looks through the base types too.
-    private static readonly Dictionary<(Type, string), bool> receives = new Dictionary<(Type, string), bool>();
+    private static float nextListenerCheck;
+    // Android's SDK reports an open for every show, but a show while the reward center is open replaces it, and only
+    // the newer one reports its close. So the game hears one open for each close.
+    private static bool rewardCenterOpen;
 
     internal static void EnsureExists()
     {
@@ -35,10 +42,12 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
         instance = callbacks.AddComponent<TheoremReachCallbacks>();
     }
 
+    // Waiting rewards go from the next Update, not inside the game's call, which may come from its listener's Awake
+    // before the game's other components are ready.
     internal static void SetListener(string gameObjectName)
     {
         listenerName = gameObjectName;
-        DeliverWaitingRewards();
+        nextListenerCheck = 0;
     }
 
     internal static void DropWaitingRewards()
@@ -54,8 +63,21 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
         DeliverWaitingRewards();
     }
 
-    [Preserve] private void OnRewardCenterOpened(string message) => Forward("OnRewardCenterOpened", message);
-    [Preserve] private void OnRewardCenterClosed(string message) => Forward("OnRewardCenterClosed", message);
+    [Preserve]
+    private void OnRewardCenterOpened(string message)
+    {
+        if (rewardCenterOpen) return;
+        rewardCenterOpen = true;
+        Forward("OnRewardCenterOpened", message);
+    }
+
+    [Preserve]
+    private void OnRewardCenterClosed(string message)
+    {
+        rewardCenterOpen = false;
+        Forward("OnRewardCenterClosed", message);
+    }
+
     [Preserve] private void TheoremReachSurveyAvailable(string available) => Forward("TheoremReachSurveyAvailable", available);
     [Preserve] private void OnMomentSurveyOpened(string message) => Forward("OnMomentSurveyOpened", message);
     [Preserve] private void OnMomentSurveyClosed(string message) => Forward("OnMomentSurveyClosed", message);
@@ -66,7 +88,9 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
     // A listener's scene can load at any frame.
     private void Update()
     {
-        if (waitingRewards.Count > 0) DeliverWaitingRewards();
+        if (waitingRewards.Count == 0 || Time.unscaledTime < nextListenerCheck) return;
+        nextListenerCheck = Time.unscaledTime + ListenerCheckSeconds;
+        DeliverWaitingRewards();
     }
 
     private void OnDestroy()
@@ -74,12 +98,12 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
         if (instance == this) instance = null;
     }
 
-    // Each reward leaves the queue as it's sent, so a listener that throws leaves the rest for the next frame.
+    // Each reward leaves the queue as it's sent, so a listener that throws leaves the rest for a later check.
     private static void DeliverWaitingRewards()
     {
         while (waitingRewards.Count > 0)
         {
-            GameObject listener = Listener("OnReward");
+            GameObject listener = Listener();
             if (listener == null) return;
             listener.SendMessage("OnReward", waitingRewards.Dequeue(), SendMessageOptions.DontRequireReceiver);
         }
@@ -87,42 +111,17 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
 
     private static void Forward(string method, string message)
     {
-        GameObject listener = Listener(method);
+        GameObject listener = Listener();
         if (listener != null) listener.SendMessage(method, message, SendMessageOptions.DontRequireReceiver);
     }
 
-    // The listener, if it's in the scene with a component that has the method: SendMessage would drop the call
-    // otherwise.
-    private static GameObject Listener(string method)
+    // The active GameObject with the listener's name, if there is one.
+    private static GameObject Listener()
     {
         if (string.IsNullOrEmpty(listenerName)) return null;
         GameObject listener = GameObject.Find(listenerName);
         // This object is never the game's listener: a reward would come straight back to it.
         if (listener == null || (instance != null && listener == instance.gameObject)) return null;
-        foreach (MonoBehaviour component in listener.GetComponents<MonoBehaviour>())
-        {
-            // A missing script leaves a null component.
-            if (component != null && Receives(component.GetType(), method)) return listener;
-        }
-        return null;
-    }
-
-    private static bool Receives(Type type, string method)
-    {
-        if (receives.TryGetValue((type, method), out bool found)) return found;
-        found = false;
-        for (Type t = type; t != null && t != typeof(MonoBehaviour) && !found; t = t.BaseType)
-        {
-            foreach (MethodInfo candidate in t.GetMethods(AnyInstanceMethod))
-            {
-                if (candidate.Name == method && candidate.GetParameters().Length <= 1)
-                {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        receives[(type, method)] = found;
-        return found;
+        return listener;
     }
 }

@@ -6,15 +6,17 @@
   package, so no old file stays behind. A script finds the files older packages left under `Assets` and offers to
   remove them.
 - On TheoremReach's Android SDK 3.7.1, from Maven Central, and iOS SDK 3.6.2, which the package bundles.
-- Unity 2022.3.62f1 or later, with Unity's External Dependency Manager in place of Google's EDM4U. One Maven entry
+- Unity 2022.3.62f3 or later, with Unity's External Dependency Manager in place of Google's EDM4U. One Maven entry
   replaces the hand-kept list of Android libraries.
 - New: `SetLoadingBarColor` and `SetMmpInstallId`.
 - A reward that comes while the listener GameObject isn't in the scene waits for it, instead of being lost: the SDKs
   confirm a reward once they've sent it. They now send every callback to the package's own GameObject, kept across
   scenes, which passes each one on to the listener `SetListener` names. A start for another user drops a waiting
   reward.
-- Every call exists on every platform and does nothing outside an Android or iOS player. A null or empty argument
-  throws an `ArgumentException`.
+- Each `OnRewardCenterOpened` gets one `OnRewardCenterClosed`: on Android when a second show replaces an open reward
+  center, and on iOS when `Initialize` comes while one is open.
+- Every call exists on every platform and does nothing outside an Android or iOS player. A null argument, or an empty
+  one where the SDKs need text, throws an `ArgumentException`.
 - iOS: the reward center opens from Unity's own view controller, one at a time, and the status bar over it follows its
   title. The framework embeds from its import settings, with no post-build script, so it's no longer embedded twice.
   The bridge's C functions are prefixed, so they can't collide with another plug-in's.

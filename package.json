@@ -4,7 +4,7 @@
   "displayName": "TheoremReach",
   "description": "Rewarded surveys for Android and iOS games: TheoremReach's native SDKs (Android 3.7.1, iOS 3.6.2) behind one C# API.",
   "unity": "2022.3",
-  "unityRelease": "62f1",
+  "unityRelease": "62f3",
   "author": {
     "name": "TheoremReach",
     "email": "publishers@theoremreach.com",
@@ -20,6 +20,6 @@
     "monetization"
   ],
   "dependencies": {
-    "com.unity.external-dependency-manager": "2.1.0"
+    "com.unity.external-dependency-manager": "2.1.1"
   }
 }
