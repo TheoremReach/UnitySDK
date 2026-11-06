@@ -1,0 +1,109 @@
+name: Release (tag the package)
+
+# On demand only. A git package's release is a tag: games add https://github.com/TheoremReach/UnitySDK.git#<version>,
+# and the Package Manager fetches the commit it names. Before tagging, the job checks that the version is package.json's
+# and a valid tag name, that CI passed on this commit, and that a real release runs on master. A dry run, the default,
+# does all of that and prints the tag call it would make: the tag API has no dry run of its own.
+#
+# A tag already on this run's commit is taken as this release's, so the job can run again.
+#
+# The push trigger only registers the workflow, so it can be dispatched on a branch before it reaches master. Its job
+# runs on dispatch alone.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to release, which package.json must declare
+        required: true
+      dry_run:
+        description: Dry run (check, don't tag)
+        type: boolean
+        default: true
+  push:
+    paths:
+      - .github/workflows/release.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    name: Check and tag (dry run unless unticked)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write # the version tag, made through the API
+      actions: read # CI's runs on this commit
+    env:
+      VERSION: ${{ inputs.version }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      # No saved credentials: only the steps that need a token get one.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$DRY_RUN" != true ] && [ "$GITHUB_REF" != refs/heads/master ]; then
+            echo "::error::A release runs on master, not $GITHUB_REF: dry runs only elsewhere"
+            exit 1
+          fi
+          if ! git check-ref-format "refs/tags/$VERSION"; then
+            echo "::error::$VERSION isn't a valid tag name"
+            exit 1
+          fi
+          declared=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          if [ "$declared" != "$VERSION" ]; then
+            echo "::error::package.json declares $declared, not $VERSION"
+            exit 1
+          fi
+
+          # CI's newest run on this commit must have passed: on master, the run its push started. A pull request's runs
+          # name its branch's head, so on a branch (a dry run) any run of this commit counts.
+          if [ "$GITHUB_REF" = refs/heads/master ]; then
+            filters=(--branch master --event push)
+          else
+            filters=()
+          fi
+          ci=$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" "${filters[@]}" --limit 1 \
+            --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"')
+          if [ "$ci" != "completed success" ]; then
+            echo "::error::CI on $GITHUB_SHA is '${ci:-not run}', not a success"
+            exit 1
+          fi
+
+          # The tag, if there is one. matching-refs answers [] for none, where a lookup by name answers a 404 body; a
+          # call that fails fails the step.
+          tagged=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$VERSION" \
+            --jq '.[] | select(.ref == "refs/tags/" + env.VERSION) | .object.type + " " + .object.sha')
+          if [ -n "$tagged" ]; then
+            tagged_commit=${tagged#* }
+            if [ "${tagged%% *}" = tag ]; then
+              tagged_commit=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tagged_commit" --jq .object.sha)
+            fi
+            if [ "$tagged_commit" != "$GITHUB_SHA" ]; then
+              echo "::error::The tag $VERSION names $tagged_commit, not this run's commit. If nothing was released from that commit, delete the tag and run again."
+              exit 1
+            fi
+            echo "The tag $VERSION names this commit already (a run that didn't finish)"
+            echo "ALREADY_TAGGED=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Tag the commit
+        if: env.ALREADY_TAGGED != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=(gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$VERSION" -f sha="$GITHUB_SHA" --jq .ref)
+          if [ "$DRY_RUN" = true ]; then
+            echo "Dry run, so not running: ${tag[*]}"
+          else
+            "${tag[@]}"
+          fi
