@@ -75,8 +75,8 @@ def check_versions():
     newest = re.search(r'^## (\S+)', changelog, re.M)
     if not newest or newest.group(1) != version:
         fail(f'The changelog\'s newest entry is {newest and newest.group(1)}, not {version}')
-    if package.get('unity') != '2022.3' or 'com.unity.external-dependency-manager' not in package.get('dependencies', {}):
-        fail('package.json must declare Unity 2022.3 and depend on Unity\'s External Dependency Manager')
+    if package.get('unity') != '6000.0' or 'com.unity.external-dependency-manager' not in package.get('dependencies', {}):
+        fail('package.json must declare Unity 6000.0 and depend on Unity\'s External Dependency Manager')
 
     android = re.findall(r'<androidPackage spec="com\.theoremreach:theoremreach:([^"]+)"', read('Editor/TheoremReachDependencies.xml'))
     if len(android) != 1:

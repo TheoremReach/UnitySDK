@@ -5,15 +5,16 @@ Monetize your players through rewarded surveys. This package wraps TheoremReach'
 
 ## Requirements
 
-- Unity 2022.3.62f3 or later, Unity 6 included. On iOS, Unity's Objective-C Xcode project: the Swift project type that
-  Unity 6.5 added as an option isn't supported yet.
+- Unity 6000.0.85f2 or later. On iOS, Unity's Objective-C Xcode project: the Swift project type that Unity 6.5 added as
+  an option isn't supported yet.
 - Android: a Target API Level of 35 or later (Google sign-in uses Credential Manager, which needs compileSdk 35), and a
   Minimum API Level of 23 or later.
 - iOS 14 or later.
 - Git, which Unity's Package Manager uses to fetch a package from a git URL.
 
 The package depends on Unity's External Dependency Manager (`com.unity.external-dependency-manager`), which the Package
-Manager installs with it. A game that stays on an older Unity can keep the 3.7.0 `.unitypackage`
+Manager installs with it. Unity 2022.3 and earlier can't build the Android SDK's libraries, which are compiled with
+Kotlin 2, so a game that stays on one can keep the 3.7.0 `.unitypackage`
 ([theoremreach-3.7.0.unitypackage](https://github.com/TheoremReach/UnitySDK/raw/1fb3e741362f7b594cda50db9c92e6568aa507a9/theoremreach-3.7.0.unitypackage)).
 
 ## Install
@@ -33,6 +34,8 @@ Or add it to `Packages/manifest.json`:
 To upgrade, change the tag. The Package Manager replaces the whole package, so no old file stays behind.
 
 ### Upgrading from a .unitypackage (3.7.0 and earlier)
+
+Move the game to Unity 6000.0.85f2 or later first, if it's on an older Unity. Then:
 
 1. **Before you add the package,** delete the old TheoremReach files under `Assets`: `Assets/Plugins/TheoremReach.cs`,
    `Assets/Plugins/iOS/TheoremReachWrapper.h` and `.mm`, `Assets/Plugins/iOS/SDK`, and `Assets/TheoremReach`. Left in,

@@ -6,8 +6,9 @@
   package, so no old file stays behind. A script finds the files older packages left under `Assets` and offers to
   remove them.
 - On TheoremReach's Android SDK 3.7.1, from Maven Central, and iOS SDK 3.6.2, which the package bundles.
-- Unity 2022.3.62f3 or later, with Unity's External Dependency Manager in place of Google's EDM4U. One Maven entry
-  replaces the hand-kept list of Android libraries.
+- Unity 6000.0.85f2 or later, with Unity's External Dependency Manager in place of Google's EDM4U. One Maven entry
+  replaces the hand-kept list of Android libraries. Unity 2022.3 can't build the Android SDK's libraries, which are
+  compiled with Kotlin 2, so a game on it keeps 3.7.0.
 - New: `SetLoadingBarColor` and `SetMmpInstallId`.
 - A reward that comes while the listener GameObject isn't in the scene waits for it, instead of being lost: the SDKs
   confirm a reward once they've sent it. They now send every callback to the package's own GameObject, kept across

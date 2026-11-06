@@ -3,8 +3,8 @@
   "version": "4.0.0",
   "displayName": "TheoremReach",
   "description": "Rewarded surveys for Android and iOS games: TheoremReach's native SDKs (Android 3.7.1, iOS 3.6.2) behind one C# API.",
-  "unity": "2022.3",
-  "unityRelease": "62f3",
+  "unity": "6000.0",
+  "unityRelease": "85f2",
   "author": {
     "name": "TheoremReach",
     "email": "publishers@theoremreach.com",
