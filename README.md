@@ -13,13 +13,17 @@ Monetize your players through rewarded surveys. This package wraps TheoremReach'
 - Git, which Unity's Package Manager uses to fetch a package from a git URL.
 
 The package depends on Unity's External Dependency Manager (`com.unity.external-dependency-manager`), which the Package
-Manager installs with it. Unity 2022.3 and earlier can't build the Android SDK's libraries, which are compiled with
-Kotlin 2, so a game that stays on one can keep the 3.7.0 `.unitypackage`
+Manager installs with it. Unity 2022.3 and earlier can't build the Android SDK's libraries: their Android Gradle plugin
+(7.4.2 in 2022.3) can't dex the Kotlin 2 code in some of them. A game that stays on one can keep the 3.7.0
+`.unitypackage`
 ([theoremreach-3.7.0.unitypackage](https://github.com/TheoremReach/UnitySDK/raw/1fb3e741362f7b594cda50db9c92e6568aa507a9/theoremreach-3.7.0.unitypackage)).
+The Package Manager doesn't stop an older Unity from adding the package by git URL, so there it installs and then fails
+the Android build in D8 (`:launcher:mergeExtDexRelease`).
 
 ## Install
 
-In Unity, open **Window > Package Manager**, choose **+ > Add package from git URL...**, and enter:
+In Unity, open **Window > Package Manager**, choose **+ > Install package from git URL...**, enter the URL, and
+select **Install**:
 
 ```text
 https://github.com/TheoremReach/UnitySDK.git#4.0.0
@@ -35,7 +39,8 @@ To upgrade, change the tag. The Package Manager replaces the whole package, so n
 
 ### Upgrading from a .unitypackage (3.7.0 and earlier)
 
-Move the game to Unity 6000.0.85f2 or later first, if it's on an older Unity. Then:
+Move the game to Unity 6000.0.85f2 or later first, if it's on an older Unity, with iOS Build Support: 3.7.0's
+post-build script needs it until step 1 deletes it. Then:
 
 1. **Before you add the package,** delete the old TheoremReach files under `Assets`: `Assets/Plugins/TheoremReach.cs`,
    `Assets/Plugins/iOS/TheoremReachWrapper.h` and `.mm`, `Assets/Plugins/iOS/SDK`, and `Assets/TheoremReach`. Left in,
@@ -143,8 +148,9 @@ The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`,
 No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, so a game can pause for the reward
 center and resume at its close. On iOS the close comes at another moment in two cases: `Initialize` while the reward
 center is open reports it then, though the reward center stays on screen until the player closes it; and one that UIKit
-took away with the view it opened over (another plug-in's, say) reports it at the next show. Like every callback but a
-reward, each goes only to a listener that's there when it comes.
+took away without its own close (when another plug-in dismisses the view it opened over, or everything over Unity's)
+reports it at the next show or `Initialize`. Like every callback but a reward, each goes only to a listener that's there
+when it comes.
 
 For security, we recommend crediting rewards from the server side callback; if you use both, credit each reward once.
 

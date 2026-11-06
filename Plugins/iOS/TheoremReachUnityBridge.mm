@@ -42,9 +42,9 @@ static void TRSend(const char *method, NSString *message)
 #pragma mark - The status bar over the reward center
 
 // The reward center asks for a status bar that follows its title (the SDK's rewardCenterStatusBarStyle: dark under a
-// dark title, light under a light one), but a Unity game turns view controller based status bar appearance off, so
-// iOS never asks it: the game's own style would sit on the title bar. Such a game gets the reward center's style while
-// it's open.
+// dark title, light under a light one). Unity's Info.plist turns view controller based status bar appearance on, so
+// iOS asks it. A game that turns it off anyway, which Unity no longer supports, would have its own style sit on the
+// title bar, since iOS never asks: such a game gets the reward center's style while it's open.
 static BOOL TRGameSetsStatusBar(void)
 {
     NSNumber *viewControllerBased =
