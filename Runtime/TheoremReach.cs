@@ -157,8 +157,8 @@ public class TheoremReach : MonoBehaviour
     }
 
     /// <summary>
-    /// For a game that measures installs with a mobile measurement partner (MMP): the partner, such as apptrove, and
-    /// the install ID it gave this install. Set it after Initialize, before the reward center opens.
+    /// Only for a game TheoremReach has set up for MMP attribution: the mobile measurement partner, such as apptrove,
+    /// and the install ID it gave this install. Set it after Initialize, before the reward center opens.
     /// </summary>
     public static void SetMmpInstallId(string provider, string installId)
     {

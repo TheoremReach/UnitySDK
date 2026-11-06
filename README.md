@@ -9,7 +9,7 @@ Monetize your players through rewarded surveys. This package wraps TheoremReach'
   an option isn't supported yet.
 - Android: a Target API Level of 35 or later (Google sign-in uses Credential Manager, which needs compileSdk 35), and a
   Minimum API Level of 23 or later.
-- iOS 14 or later.
+- iOS: a Target minimum iOS Version of 14.0 or later, in the iOS Player settings. Unity's default is lower.
 - Git, which Unity's Package Manager uses to fetch a package from a git URL.
 
 The package depends on Unity's External Dependency Manager (`com.unity.external-dependency-manager`), which the Package
@@ -24,8 +24,8 @@ BOM to the `dependencies` of `Assets/Plugins/Android/mainTemplate.gradle`, above
 
 ## Install
 
-In Unity, open **Window > Package Manager**, choose **+ > Install package from git URL...**, enter the URL, and
-select **Install**:
+In Unity, open **Window > Package Manager** (**Window > Package Management > Package Manager** in Unity 6.3), choose
+**+ > Install package from git URL...**, enter the URL, and select **Install**:
 
 ```text
 https://github.com/TheoremReach/UnitySDK.git#4.0.0
@@ -136,7 +136,7 @@ is lost, and starting the SDK for another user drops it.
 | `SetNavigationBarColor(hexColor)` | The title bar's color, such as `#17b4b3`. |
 | `SetNavigationBarTextColor(hexColor)` | The title's color. |
 | `SetLoadingBarColor(hexColor)` | The thin loading bar's color, `#FC178D` by default. |
-| `SetMmpInstallId(provider, installId)` | For a game that measures installs with a mobile measurement partner (MMP): the partner, such as `apptrove`, and its install ID. Call it before the reward center opens. |
+| `SetMmpInstallId(provider, installId)` | Only for a game TheoremReach has set up for MMP attribution: the mobile measurement partner, such as `apptrove`, and the install ID it gave this install. Call it before the reward center opens. |
 | `OnResume()`, `OnPause()` | Android: the game came back to the front, or went to the background. |
 
 Make the settings after `Initialize`: starting the SDK resets some of them (the colors on iOS, the title on Android).
