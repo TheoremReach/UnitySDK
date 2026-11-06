@@ -17,8 +17,8 @@ Manager installs with it. Unity 2022.3 and earlier can't build the Android SDK's
 (7.4.2 in 2022.3) can't dex the Kotlin 2 code in some of them. A game that stays on one can keep the 3.7.0
 `.unitypackage`
 ([theoremreach-3.7.0.unitypackage](https://github.com/TheoremReach/UnitySDK/raw/1fb3e741362f7b594cda50db9c92e6568aa507a9/theoremreach-3.7.0.unitypackage)).
-If 3.7.0's Android build fails on duplicate Kotlin classes (`kotlin-stdlib` against `-jdk7` and `-jdk8`), add Kotlin's BOM
-to the `dependencies` of `Assets/Plugins/Android/mainTemplate.gradle`, above the External Dependency Manager's
+If 3.7.0's Android build fails on duplicate Kotlin classes (`kotlin-stdlib` against `-jdk7` and `-jdk8`), add Kotlin's
+BOM to the `dependencies` of `Assets/Plugins/Android/mainTemplate.gradle`, above the External Dependency Manager's
 lines: `implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')`. The Package Manager doesn't stop an older
 Unity from adding the package by git URL, so there it installs and then fails the Android build in D8
 (`:launcher:mergeExtDexRelease`).
