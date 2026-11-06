@@ -80,6 +80,18 @@ static void TRRestoreStatusBar(void)
 }
 #pragma clang diagnostic pop
 
+// For a reward center whose close the SDK won't report: the game's style comes back, and the game hears the close of
+// the open it heard now rather than never, since a game that paused its audio for the reward center would otherwise
+// stay paused.
+static void TRReportUnreportedClose(void)
+{
+    TRRestoreStatusBar();
+    if (TRRewardCenterOpen) {
+        TRRewardCenterOpen = NO;
+        TRSend("OnRewardCenterClosed", @"");
+    }
+}
+
 @implementation TRUnityBridge
 
 // Before the app's launch, so no notification goes unheard.
@@ -154,13 +166,8 @@ extern "C" {
 void TheoremReach_initialize(const char *apiKey, const char *userId)
 {
     // Starting the SDK forgets an open reward center, which then never reports its close, though it stays on screen
-    // until the player closes it. So the game's style comes back, and the game hears the close of the open it heard
-    // now rather than never: a game that paused its audio for the reward center would otherwise stay paused.
-    TRRestoreStatusBar();
-    if (TRRewardCenterOpen) {
-        TRRewardCenterOpen = NO;
-        TRSend("OnRewardCenterClosed", @"");
-    }
+    // until the player closes it.
+    TRReportUnreportedClose();
     [TheoremReach initWithApiKey:TRString(apiKey) userId:TRString(userId)];
 }
 
@@ -176,6 +183,9 @@ void TheoremReach_showRewardCenter(const char *placementId)
     if ([TheoremReach getInstance].rewardCenterViewController.presentingViewController != nil) {
         return;
     }
+    // None is on screen, so an open the game heard with no close yet went without reporting it: UIKit took the reward
+    // center away with the view it was presented over, as when another plug-in dismisses everything over Unity's.
+    TRReportUnreportedClose();
 
     // Presented from Unity's own view controller. The placement goes with every show, nil when there's none: the SDK
     // clears it only when its reward center closes, so one that never closed would hand its placement to the next.
@@ -184,14 +194,9 @@ void TheoremReach_showRewardCenter(const char *placementId)
                 fromViewController:UnityGetGLViewController()];
 
     // The SDK reports the reward center open before presenting it. If UIKit refused the presentation (the presenter
-    // was mid-transition, say, or the last reward center was still sliding out), no close will come, so the game's
-    // style comes back, and the game hears the close of the open it heard.
+    // was mid-transition, say, or the last reward center was still sliding out), no close will come.
     if ([TheoremReach getInstance].rewardCenterViewController.presentingViewController == nil) {
-        TRRestoreStatusBar();
-        if (TRRewardCenterOpen) {
-            TRRewardCenterOpen = NO;
-            TRSend("OnRewardCenterClosed", @"");
-        }
+        TRReportUnreportedClose();
     }
 }
 

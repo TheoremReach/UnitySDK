@@ -14,9 +14,9 @@
   confirm a reward once they've sent it. They now send every callback to the package's own GameObject, kept across
   scenes, which passes each one on to the listener `SetListener` names. A start for another user drops a waiting
   reward.
-- No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, as one did on Android when a
-  second show replaced an open reward center. On iOS, `Initialize` while one is open sends its close, which the SDK's
-  start would lose.
+- No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, as one did on Android for a
+  show while the reward center was open. On iOS, `Initialize` while one is open sends its close, which the SDK's start
+  would lose, and so does the next show after UIKit took one away with the view it opened over.
 - Every call exists on every platform and does nothing outside an Android or iOS player. A null argument, or an empty
   one where the SDKs need text, throws an `ArgumentException`; a null placement is no placement.
 - iOS: the reward center opens from Unity's own view controller, one at a time, and the status bar over it follows its

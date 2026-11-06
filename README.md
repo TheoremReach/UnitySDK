@@ -140,9 +140,11 @@ The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`,
 | `OnRewardCenterClosed()` | The reward center closed. |
 | `TheoremReachSurveyAvailable(string available)` | A survey became available (`"true"`) or not (`"false"`). |
 
-No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, so a game can pause for the
-reward center and resume after it. Like every callback but a reward, each goes only to a listener that's there when it
-comes.
+No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, so a game can pause for the reward
+center and resume at its close. On iOS the close comes at another moment in two cases: `Initialize` while the reward
+center is open reports it then, though the reward center stays on screen until the player closes it; and one that UIKit
+took away with the view it opened over (another plug-in's, say) reports it at the next show. Like every callback but a
+reward, each goes only to a listener that's there when it comes.
 
 For security, we recommend crediting rewards from the server side callback; if you use both, credit each reward once.
 
