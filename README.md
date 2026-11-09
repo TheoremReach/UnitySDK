@@ -24,8 +24,8 @@ BOM to the `dependencies` of `Assets/Plugins/Android/mainTemplate.gradle`, above
 
 ## Install
 
-In Unity, open **Window > Package Manager** (**Window > Package Management > Package Manager** in Unity 6.1 and later), choose
-**+ > Install package from git URL...**, enter the URL, and select **Install**:
+In Unity, open **Window > Package Manager** (**Window > Package Management > Package Manager** in Unity 6.1 and
+later), choose **+ > Install package from git URL...**, enter the URL, and select **Install**:
 
 ```text
 https://github.com/TheoremReach/UnitySDK.git#4.0.1
@@ -51,10 +51,10 @@ post-build script needs it until step 1 deletes it. Then:
    `Assets/ExternalDependencyManager`, or remove `com.google.external-dependency-manager` in the Package Manager if it
    came from a registry. Unity's External Dependency Manager replaces it, and while both are installed, Unity asks which
    to use: choose **Use Unity's External Dependency Manager** (or **Keep Unity's**). If another package depends on
-   EDM4U, keep it installed: removing it removes that package too. Gradle templates from an older Unity fail Unity 6's Android build, so delete `mainTemplate.gradle`,
-   `settingsTemplate.gradle` and `gradleTemplate.properties` in `Assets/Plugins/Android` if EDM4U wrote them; the
-   External Dependency Manager writes Unity 6's. If the game changed a template itself, make those changes again in
-   Unity 6's, as Unity's upgrade guide says.
+   EDM4U, keep it installed: removing it removes that package too. Gradle templates from an older Unity fail Unity 6's
+   Android build, so delete `mainTemplate.gradle`, `settingsTemplate.gradle` and `gradleTemplate.properties` in
+   `Assets/Plugins/Android` if EDM4U wrote them; the External Dependency Manager writes Unity 6's. If the game changed a
+   template itself, make those changes again in Unity 6's, as Unity's upgrade guide says.
 3. Add the package. When it first loads, it looks for anything else the old packages left, such as the `theoremreach`
    and library AARs in `Assets/Plugins/Android`, by the GUIDs those packages gave them, and offers to move it to the
    trash. **Tools > TheoremReach > Remove Old TheoremReach Files** offers again.
@@ -72,8 +72,8 @@ The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Three thing
   a game that destroys everything kept across scenes, to restart, calls `Initialize` again afterwards.
 
 If your game copied `SetListener("gameObject.name")` from an earlier version of the guide, pass your listener's name
-instead, as in Usage. That string names no GameObject, so 3.7.0 dropped those rewards, and 4.0.0 keeps them waiting
-until the game ends.
+instead, as in Usage. That string names no GameObject, so 3.7.0 dropped those rewards, and 4.0.0 and later keep them
+waiting until the game ends.
 
 ## Usage
 
