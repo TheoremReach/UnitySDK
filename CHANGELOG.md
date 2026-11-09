@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.0.1
+
+- On TheoremReach's Android SDK 3.7.2 and iOS SDK 3.7.0.
+- Android: a show while the game is paused reports no open. 4.0.0 passed on the open the SDK reported, which no close
+  followed, so a game that paused for the reward center stayed paused. A pause partway through a show, which the show's
+  own thread can meet while it reads the advertising ID, no longer ends the game.
+- iOS: the minimum is iOS 15.0, the oldest iOS that Xcode 27 builds for. Set the Target minimum iOS Version to 15.0 or
+  later in the iOS Player settings.
+- The README: the Package Manager's menu path from Unity 6.1, which External Dependency Manager to choose, the listener's
+  name, a script in its own assembly definition, and when `TheoremReachSurveyAvailable` comes.
+
 ## 4.0.0
 
 - A Unity Package Manager package, added by git URL, in place of the `.unitypackage`. Upgrades replace the whole

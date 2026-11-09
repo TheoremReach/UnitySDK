@@ -14,7 +14,7 @@ using UnityEngine;
 public class TheoremReach : MonoBehaviour
 {
     /// <summary>This package's version.</summary>
-    public const string Version = "4.0.0";
+    public const string Version = "4.0.1";
 
     /// <summary>
     /// Starts the SDK for this user. The user ID comes back to you in the server side reward callback.
