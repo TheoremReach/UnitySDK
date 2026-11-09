@@ -30,9 +30,8 @@ internal sealed class TheoremReachCallbacks : MonoBehaviour
     private static string listenerName;
     private static readonly Queue<string> waitingRewards = new Queue<string>();
     private static float nextListenerCheck;
-    // Android's SDK reports an open for every show, but a show while the reward center is open either replaces it,
-    // and only the newer one reports its close, or, with the game paused under it, opens nothing. So the game hears one
-    // open for each close.
+    // The game hears one open for each close. Android's SDK pairs them itself from 3.7.2, but each Unity show runs on a
+    // thread of its own and the SDK's check isn't synchronized, so two shows at once can still both report an open.
     private static bool rewardCenterOpen;
 
     internal static void EnsureExists()

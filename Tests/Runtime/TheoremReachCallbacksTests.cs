@@ -99,8 +99,8 @@ namespace TheoremReachSDK.Tests
         public void TheGameHearsOneOpenForEachClose()
         {
             RewardListener listener = AddListener<RewardListener>();
-            // As Android's SDK reports a show while the reward center is open: it replaces the open one, and only the
-            // newer one reports its close.
+            // As two of Android's shows at once can report, each on its own thread (and as 3.7.1 reported a show while
+            // the reward center was open).
             FromSdk("OnRewardCenterOpened");
             FromSdk("OnRewardCenterOpened");
             FromSdk("OnRewardCenterClosed");

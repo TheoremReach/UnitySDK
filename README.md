@@ -1,7 +1,7 @@
 # TheoremReach Unity SDK
 
-Monetize your players through rewarded surveys. This package wraps TheoremReach's native SDKs: Android 3.7.1 and iOS
-3.6.2. The integration guide is at [theoremreach.com/docs/unity](https://theoremreach.com/docs/unity).
+Monetize your players through rewarded surveys. This package wraps TheoremReach's native SDKs: Android 3.7.2 and iOS
+3.7.0. The integration guide is at [theoremreach.com/docs/unity](https://theoremreach.com/docs/unity).
 
 ## Requirements
 
@@ -9,7 +9,7 @@ Monetize your players through rewarded surveys. This package wraps TheoremReach'
   an option isn't supported yet.
 - Android: a Target API Level of 35 or later (Google sign-in uses Credential Manager, which needs compileSdk 35), and a
   Minimum API Level of 23 or later.
-- iOS: a Target minimum iOS Version of 14.0 or later, in the iOS Player settings. Unity's default is lower.
+- iOS: a Target minimum iOS Version of 15.0 or later, in the iOS Player settings. Unity's default is lower.
 - Git, which Unity's Package Manager uses to fetch a package from a git URL.
 
 The package depends on Unity's External Dependency Manager (`com.unity.external-dependency-manager`), which the Package
@@ -24,17 +24,17 @@ BOM to the `dependencies` of `Assets/Plugins/Android/mainTemplate.gradle`, above
 
 ## Install
 
-In Unity, open **Window > Package Manager** (**Window > Package Management > Package Manager** in Unity 6.3), choose
-**+ > Install package from git URL...**, enter the URL, and select **Install**:
+In Unity, open **Window > Package Manager** (**Window > Package Management > Package Manager** in Unity 6.1 and
+later), choose **+ > Install package from git URL...**, enter the URL, and select **Install**:
 
 ```text
-https://github.com/TheoremReach/UnitySDK.git#4.0.0
+https://github.com/TheoremReach/UnitySDK.git#4.0.1
 ```
 
 Or add it to `Packages/manifest.json`:
 
 ```json
-"com.theoremreach.sdk": "https://github.com/TheoremReach/UnitySDK.git#4.0.0"
+"com.theoremreach.sdk": "https://github.com/TheoremReach/UnitySDK.git#4.0.1"
 ```
 
 To upgrade, change the tag. The Package Manager replaces the whole package, so no old file stays behind.
@@ -50,10 +50,11 @@ post-build script needs it until step 1 deletes it. Then:
 2. If you added Google's EDM4U only for TheoremReach, remove it before you add the package: delete
    `Assets/ExternalDependencyManager`, or remove `com.google.external-dependency-manager` in the Package Manager if it
    came from a registry. Unity's External Dependency Manager replaces it, and while both are installed, Unity asks which
-   to use. Gradle templates from an older Unity fail Unity 6's Android build, so delete `mainTemplate.gradle`,
-   `settingsTemplate.gradle` and `gradleTemplate.properties` in `Assets/Plugins/Android` if EDM4U wrote them; the
-   External Dependency Manager writes Unity 6's. If the game changed a template itself, make those changes again in
-   Unity 6's, as Unity's upgrade guide says.
+   to use: choose **Use Unity's External Dependency Manager** (or **Keep Unity's**). If another package depends on
+   EDM4U, keep it installed: removing it removes that package too. Gradle templates from an older Unity fail Unity 6's
+   Android build, so delete `mainTemplate.gradle`, `settingsTemplate.gradle` and `gradleTemplate.properties` in
+   `Assets/Plugins/Android` if EDM4U wrote them; the External Dependency Manager writes Unity 6's. If the game changed a
+   template itself, make those changes again in Unity 6's, as Unity's upgrade guide says.
 3. Add the package. When it first loads, it looks for anything else the old packages left, such as the `theoremreach`
    and library AARs in `Assets/Plugins/Android`, by the GUIDs those packages gave them, and offers to move it to the
    trash. **Tools > TheoremReach > Remove Old TheoremReach Files** offers again.
@@ -69,6 +70,10 @@ The API is 3.7.0's, plus `SetLoadingBarColor` and `SetMmpInstallId`. Three thing
   which passes them on to your listener. A reward that comes while your listener isn't in the scene waits for it,
   where 3.7.0 lost it. `Initialize` makes that GameObject, so call it on Unity's main thread, and keep the GameObject:
   a game that destroys everything kept across scenes, to restart, calls `Initialize` again afterwards.
+
+If your game copied `SetListener("gameObject.name")` from an earlier version of the guide, pass your listener's name
+instead, as in Usage. That string names no GameObject, so 3.7.0 dropped those rewards, and 4.0.0 and later keep them
+waiting until the game ends.
 
 ## Usage
 
@@ -119,7 +124,12 @@ public class Surveys : MonoBehaviour
 }
 ```
 
-Each callback goes to the GameObject `SetListener` names, found by that name when the callback comes. A reward waits
+Scripts in Unity's predefined assemblies, such as `Assembly-CSharp`, see the package's `TheoremReach` class with
+nothing to add. A script in an assembly definition of your own needs `TheoremReach` added to that definition's
+Assembly Definition References.
+
+Each callback goes to the GameObject `SetListener` names, found by that name when the callback comes, so give it a name
+no other active GameObject has: with two, a reward can go to the one without `OnReward` and be lost. A reward waits
 while no active GameObject has that name, so one that arrives while the listener's scene is loading isn't lost. The
 other callbacks go only to a listener that's there. The wait is in memory: a reward still waiting when the game ends
 is lost, and starting the SDK for another user drops it.
@@ -150,7 +160,7 @@ The Moments calls of 3.x (`ShowMomentSurvey`, `EnableMoments`) and `IsProfiled`,
 | `OnReward(string quantity)` | The player earned `quantity` of your currency, in your app's units. |
 | `OnRewardCenterOpened()` | The reward center opened. |
 | `OnRewardCenterClosed()` | The reward center closed. |
-| `TheoremReachSurveyAvailable(string available)` | A survey became available (`"true"`) or not (`"false"`). |
+| `TheoremReachSurveyAvailable(string available)` | After each of the SDK's checks, as at the start and when the reward center closes: `"true"` if a survey is available, `"false"` if not. |
 
 No second `OnRewardCenterOpened` comes before the first one's `OnRewardCenterClosed`, so a game can pause for the reward
 center and resume at its close. On iOS the close comes at another moment in two cases: `Initialize` while the reward
@@ -163,14 +173,14 @@ For security, we recommend crediting rewards from the server side callback; if y
 
 ## Android
 
-The External Dependency Manager adds `com.theoremreach:theoremreach:3.7.1` from Maven Central to the Gradle build, with
+The External Dependency Manager adds `com.theoremreach:theoremreach:3.7.2` from Maven Central to the Gradle build, with
 the libraries it names. It writes the dependency and its repositories into the Gradle templates in
 `Assets/Plugins/Android` (`mainTemplate.gradle`, `settingsTemplate.gradle` and `gradleTemplate.properties`), copying in
 Unity's own when the project has none, so keep those files in your project. No AAR goes into `Assets`.
 
 ## iOS
 
-The package bundles `TheoremReachSDK.xcframework` (3.6.2), which its import settings embed in the app. The reward center
+The package bundles `TheoremReachSDK.xcframework` (3.7.0), which its import settings embed in the app. The reward center
 opens from Unity's own view controller, and the status bar over it follows its title.
 
 ## Other platforms
